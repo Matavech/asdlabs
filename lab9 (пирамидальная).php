@@ -4,14 +4,11 @@ function heapSort(&$arr)
 {
 	$n = count($arr);
 
-	// Строим max-кучу
 	for ($i = ($n / 2) - 1; $i >= 0; $i--) {
 		heapify($arr, $n, $i);
 	}
 
-	// Постепенно извлекаем элементы из кучи
 	for ($i = $n - 1; $i > 0; $i--) {
-		// Меняем корень кучи с последним элементом массива
 		$temp = $arr[0];
 		$arr[0] = $arr[$i];
 		$arr[$i] = $temp;
@@ -39,12 +36,10 @@ function heapify(&$arr, $n, $i)
 		$arr[$i] = $arr[$largest];
 		$arr[$largest] = $temp;
 
-		// Рекурсивно применяем heapify к измененной подкуче
 		heapify($arr, $n, $largest);
 	}
 }
 
-// Пример использования
 $arr = [12, 11, 13, 5, 6, 7];
 heapSort($arr);
 
