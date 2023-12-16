@@ -108,110 +108,120 @@ function intersectCircles($x1, $y1, $r1, $x2, $y2, $r2) {
 	}
 }
 
-// Функция для генерации случайной точки в пределах заданного прямоугольника
-function generateRandomPoint($xmin, $xmax, $ymin, $ymax)
-{
-	$x = mt_rand($xmin, $xmax);
-	$y = mt_rand($ymin, $ymax);
+function circleFromThreePoints($x1, $y1, $x2, $y2, $x3, $y3) {
+	$a = $x1 - $x2;
+	$b = $y1 - $y2;
+	$c = $x1 - $x3;
+	$d = $y1 - $y3;
 
-	return ['x' => $x, 'y' => $y];
-}
+	$e = ($x1 * $x1 - $x2 * $x2 + $y1 * $y1 - $y2 * $y2) / 2;
+	$f = ($x1 * $x1 - $x3 * $x3 + $y1 * $y1 - $y3 * $y3) / 2;
 
-// Генерируем 9 случайных точек
-$points = [];
-for ($i = 0; $i < 9; $i++)
-{
-	$points[] = generateRandomPoint(0, 100, 0, 100);
-}
+	$det = $b * $c - $a * $d;
 
-// Функция для проверки, является ли точка уникальной в массиве точек
-function isUniquePoint($point, $points)
-{
-	foreach ($points as $existingPoint)
-	{
-		if ($existingPoint['x'] == $point['x'] && $existingPoint['y'] == $point['y'])
-		{
-			return false;
-		}
+	if (abs($det) < 1e-6) {
+		return false;
 	}
 
-	return true;
+	$hx = ($e * $d - $f * $b) / $det;
+	$hy = ($a * $f - $c * $e) / $det;
+
+	$radius = sqrt(($hx - $x1) ** 2 + ($hy - $y1) ** 2);
+
+	$center = ['x' => $hx, 'y' => $hy];
+
+	return ['center' => $center, 'radius' => $radius];
 }
 
-// Выбираем 6 уникальных точек для треугольника
-$trianglePoints = [];
-while (count($trianglePoints) < 6)
-{
-	$point = generateRandomPoint(0, 100, 0, 100);
-	if (isUniquePoint($point, $points))
-	{
-		$trianglePoints[] = $point;
-		$points[] = $point;
-	}
+function isTriangle($x1, $y1, $x2, $y2, $x3, $y3) {
+	$area = 0.5 * abs(($x1 * ($y2 - $y3) + $x2 * ($y3 - $y1) + $x3 * ($y1 - $y2)));
+
+	return $area != 0;
 }
 
-// Выбираем 3 уникальные точки для "большой" окружности
-$bigCirclePoints = [];
-while (count($bigCirclePoints) < 3)
-{
-	$point = generateRandomPoint(0, 100, 0, 100);
-	if (isUniquePoint($point, $points))
-	{
-		$bigCirclePoints[] = $point;
-		$points[] = $point;
-	}
+// Большая окружность по трем точкам
+$bigCx1 = -4;
+$bigCy1 = 3;
+$bigCx2 = -6;
+$bigCy2 = -3;
+$bigCx3 = 1;
+$bigCy3 = -2;
+
+//Малая окружность по трем точкам
+$smallCx1 = -5;
+$smallCy1 = 1;
+$smallCx2 = -5;
+$smallCy2 = -1;
+$smallCx3 = -3;
+$smallCy3 = -1;
+
+//Треугольник
+$rx1 = -1;
+$ry1 = 0;
+$rx2 = -2;
+$ry2 = -2;
+$rx3 = 0;
+$ry3 = -2;
+
+// Проверяем соответствие условиям
+$count = 0;
+$bigCircle = circleFromThreePoints($bigCx1,$bigCy1, $bigCx2, $bigCy2, $bigCx3, $bigCy3);
+$bigCircleX = $bigCircle['center']['x'];
+$bigCircleY = $bigCircle['center']['y'];
+$bigCircleR = $bigCircle['radius'];
+if ($bigCircle) {
+	echo 'Большая окружность существует' . PHP_EOL;
+	$count++;
+}
+$smallCircle = circleFromThreePoints($smallCx1,$smallCy1, $smallCx2, $smallCy2, $smallCx3, $smallCy3);
+$smallCircleX = $smallCircle['center']['x'];
+$smallCircleY = $smallCircle['center']['y'];
+$smallCircleR = $smallCircle['radius'];
+if ($smallCircle) {
+	echo 'Малая окружность существует  ' . PHP_EOL;
+	$count++;
+}
+if (isTriangle($rx1, $ry1, $rx2, $ry2, $rx3,$ry3)){
+	echo 'Треугольник существует' . PHP_EOL;
+	$count++;
 }
 
-// Определяем параметры для окружностей
-$bigCircleCenter = generateRandomPoint(0, 100, 0, 100);
-$bigCircleRadius = mt_rand(30, 50);
-
-$smallCircleCenter = $trianglePoints[0];
-$smallCircleRadius = mt_rand(10, 20);
-
-// Выводим точки и параметры окружностей
-echo "Точки треугольника:\n";
-print_r($trianglePoints);
-
-echo "\nТочки большой окружности:\n";
-print_r($bigCirclePoints);
-
-echo "\nПараметры большой окружности:\n";
-echo "Центр: ";
-print_r($bigCircleCenter);
-echo "Радиус: $bigCircleRadius\n";
-
-echo "\nПараметры малой окружности:\n";
-echo "Центр: ";
-print_r($smallCircleCenter);
-echo "Радиус: $smallCircleRadius\n";
-
-// Находим пересечения окружностей
-$circleIntersections = intersectCircles(
-	$bigCircleCenter['x'],
-	$bigCircleCenter['y'],
-	$bigCircleRadius,
-	$smallCircleCenter['x'],
-	$smallCircleCenter['y'],
-	$smallCircleRadius
-);
-
-echo "\nТочки пересечения окружностей:\n";
-print_r($circleIntersections);
-
-// Находим точки треугольника внутри большой окружности
-$triangleInsideBigCircle = [];
-foreach ($trianglePoints as $point)
-{
-	if (
-		($point['x'] - $bigCircleCenter['x']) ** 2 + ($point['y'] - $bigCircleCenter['y']) ** 2 <= $bigCircleRadius
-		** 2
-	)
-	{
-		$triangleInsideBigCircle[] = $point;
-	}
+//Проверка лежит ли малая окружность в большой
+//Окружность B лежит внутри окружности A, если расстояние между центрами окружностей меньше разности радиусов окружностей
+if (sqrt(($bigCircleX - $smallCircleX)**2 + ($bigCircleY-$smallCircleY)**2) < $smallCircleR) {
+	echo 'Малая окружность лежит в большой окружности' . PHP_EOL;
+	$count++;
 }
 
-echo "\nТочки треугольника внутри большой окружности:\n";
-print_r($triangleInsideBigCircle);
+//Функция для проверки, лежит ли треугольник в окружности
+function isTriangleInsideCircle($x1, $y1, $x2, $y2, $x3, $y3, $cx, $cy, $r) {
+	$distance1 = sqrt(($x1 - $cx) ** 2 + ($y1 - $cy) ** 2);
+	$distance2 = sqrt(($x2 - $cx) ** 2 + ($y2 - $cy) ** 2);
+	$distance3 = sqrt(($x3 - $cx) ** 2 + ($y3 - $cy) ** 2);
 
+	return $distance1 < $r && $distance2 < $r && $distance3 < $r;
+}
+if (isTriangleInsideCircle($rx1,$ry1,$rx2,$ry2,$rx3,$ry3,$bigCircleX,$bigCircleY,$bigCircleR)) {
+	echo 'Треугольник лежит в большой окружности' . PHP_EOL;
+	$count++;
+}
+
+//Функция для проверки, пересекается ли треугольник с окружностью
+function isTriangleIntersectsCircle($x1,$y1,$x2,$y2,$x3,$y3,$cx,$cy,$cr) {
+	$first = intersectSegmentCircle($x1,$y1,$x2,$y2,$cx,$cy,$cr);
+	$second = intersectSegmentCircle($x2,$y2,$x3,$y3,$cx,$cy,$cr);
+	$third = intersectSegmentCircle($x1,$y1,$x3,$y3,$cx,$cy,$cr);
+	return !$first && !$second && !$third;
+}
+if (isTriangleIntersectsCircle($rx1,$ry1,$rx2,$ry2,$rx3,$ry3,$smallCircleX,$smallCircleY,$smallCircleR)) {
+	echo 'Треугольник и малая окружность не пересекаются' . PHP_EOL;
+	$count++;
+}
+
+if(isTriangleInsideCircle($rx1,$ry1,$rx2,$ry2,$rx3,$ry3,$smallCircleX,$smallCircleY,$smallCircleR)) {
+	echo 'Треугольник НЕ вложен в малую окружность' . PHP_EOL;
+	$count++;
+}
+
+// Всего 7 условий
+if ($count===7) echo 'Все проверки пройдены успешно';
